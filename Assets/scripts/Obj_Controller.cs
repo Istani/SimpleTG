@@ -14,6 +14,9 @@ public class Obj_Controller : MonoBehaviour {
     private GameObject SelectedObj = null;
     private ObjModes SelectedMode = 0;
 
+    public Camera Camera_for_Screenshot;
+    public RenderTexture Camera_Texture;
+
     // Use this for initialization
     void Start () {
 
@@ -67,8 +70,10 @@ public class Obj_Controller : MonoBehaviour {
             {
                 Obj_List[count_elements].GetComponent<Item_Controller>().isActivated = false;
             }
-            SelectedObj = Obj_List[Element];
-            SelectedObj.GetComponent<Item_Controller>().isActivated = true;
+            if (Element>=0) { 
+                SelectedObj = Obj_List[Element];
+                SelectedObj.GetComponent<Item_Controller>().isActivated = true;
+            }
         }
     }
 
@@ -78,7 +83,6 @@ public class Obj_Controller : MonoBehaviour {
 
     public void DoWithObj(Vector3 NewPoss, Vector3 OldPos) {
         Vector3 Difference = NewPoss - OldPos;
-        Vector3 Difference_directions = Difference;
 
         if (Difference.x<0) { Difference.x *= -1; }
         if (Difference.y < 0) { Difference.y *= -1; }
@@ -99,8 +103,6 @@ public class Obj_Controller : MonoBehaviour {
             case ObjModes.Scale:
                 if (OldPos == Vector3.zero) return;
                 if (Distance == 0) return;
-                Debug.Log(SelectedObj.transform.localScale + " * " + Distance);
-
                 Vector3 CurrentScale = SelectedObj.transform.localScale;
                 SelectedObj.transform.localScale *= Distance;
                 
@@ -130,5 +132,17 @@ public class Obj_Controller : MonoBehaviour {
                 SelectedObj.transform.localRotation = Quaternion.Euler(RotationEuler.x, RotationEuler.y, RotationEuler.z);
                 break;
         }
+    }
+
+    public void ExportProject() {
+        SelectObj(-1);
+        Texture2D screenShot = new Texture2D(Camera_Texture.width, Camera_Texture.height, TextureFormat.RGB24, false);
+        RenderTexture.active = Camera_Texture;
+        Camera_for_Screenshot.Render();
+        screenShot.ReadPixels(new Rect(0, 0, Camera_Texture.width, Camera_Texture.height), 0, 0);
+        RenderTexture.active = null;
+        byte[] bytes = screenShot.EncodeToPNG();
+        System.IO.File.WriteAllBytes("C:/temp/temp.png", bytes);
+
     }
 }

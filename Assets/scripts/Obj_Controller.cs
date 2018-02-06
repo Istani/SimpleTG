@@ -8,14 +8,21 @@ public class Obj_Controller : MonoBehaviour {
     enum ObjModes {Move,Scale,Rotate,ScaleFix};
 
     private List<GameObject> Obj_List = new List<GameObject>();
+    public List<Texture> Recent_List = new List<Texture>();
+
     public GameObject Layer_GUI;
     public GameObject Layer_Pref_Buttons;
+
+    public GameObject Recent_GUI;
+    public GameObject Recent_Pref_Buttons;
 
     private GameObject SelectedObj = null;
     private ObjModes SelectedMode = 0;
 
     public Camera Camera_for_Screenshot;
     public RenderTexture Camera_Texture;
+
+    private bool isFocus = false;
 
     // Use this for initialization
     void Start () {
@@ -45,9 +52,14 @@ public class Obj_Controller : MonoBehaviour {
 	}
 
     public GameObject ObjectToCreate;
-    public void GenerateObj(string name) {
+    public void GenerateObj(int Pic_ID) {
+
         GameObject temp_object = (GameObject) Instantiate(ObjectToCreate, this.transform);
-        Debug.Log("Generate OBJ " + temp_object.GetComponent<SpriteRenderer>().sprite.name);
+        SpriteRenderer sr = temp_object.GetComponent<SpriteRenderer>();
+        Texture2D t = (Texture2D)Recent_List[Pic_ID];
+        sr.sprite = Sprite.Create(t, new Rect(0, 0, t.width, t.height), new Vector2(0.5f, 0.5f));
+
+        Debug.Log("Generate OBJ " + sr.sprite.name);
         temp_object.transform.localPosition = new Vector3(ObjectToCreate.transform.localPosition.x, Obj_List.Count + 1, ObjectToCreate.transform.localPosition.z);
         Obj_List.Add(temp_object);
 
@@ -55,11 +67,31 @@ public class Obj_Controller : MonoBehaviour {
         temp_button.transform.localPosition = new Vector3(Layer_Pref_Buttons.transform.localPosition.x+90, ((Obj_List.Count-1) * 100+60)*-1, Layer_Pref_Buttons.transform.localPosition.z);
         Button btn = temp_button.GetComponent<Button>();
         btn.onClick.RemoveAllListeners();
+        
+
+        Image img = btn.GetComponent<Image>();
+        img.sprite = sr.sprite;
+        btn.image = img;
 
         int ObjToClick = Obj_List.Count - 1;
         btn.onClick.AddListener(() => { SelectObj(ObjToClick); });
         SelectObj(ObjToClick);
+    }
 
+    public void GenerateRecent() {
+        GameObject temp_button = (GameObject)Instantiate(Recent_Pref_Buttons, Recent_GUI.transform);
+        temp_button.transform.localPosition = new Vector3(Recent_Pref_Buttons.transform.localPosition.x + 90, ((Recent_List.Count - 1) * 100 + 60) * -1, Recent_Pref_Buttons.transform.localPosition.z);
+        Button btn = temp_button.GetComponent<Button>();
+        btn.onClick.RemoveAllListeners();
+        Image img = btn.GetComponent<Image>();
+        Texture2D t = (Texture2D)Recent_List[Recent_List.Count - 1];
+        img.sprite = Sprite.Create(t, new Rect(0, 0, t.width, t.height), new Vector2(0.5f, 0.5f));
+        btn.image = img;
+
+
+        int ObjToClick = Recent_List.Count - 1;
+        btn.onClick.AddListener(() => { GenerateObj(ObjToClick); });
+        GenerateObj(ObjToClick);
     }
 
     public void SelectObj(int Element) {
@@ -134,15 +166,48 @@ public class Obj_Controller : MonoBehaviour {
         }
     }
 
+    void sleep(float seconds) {
+        float start = Time.realtimeSinceStartup;
+        while (start + seconds > Time.realtimeSinceStartup)
+        {
+            new WaitForSecondsRealtime(seconds);
+        }
+    }
+
     public void ExportProject() {
         SelectObj(-1);
+        sleep(1f);
+        string destination = System.IO.Path.Combine(Application.persistentDataPath, "screenshot.png");
         Texture2D screenShot = new Texture2D(Camera_Texture.width, Camera_Texture.height, TextureFormat.RGB24, false);
         RenderTexture.active = Camera_Texture;
+        sleep(0.5f);
         Camera_for_Screenshot.Render();
+        sleep(0.5f);
         screenShot.ReadPixels(new Rect(0, 0, Camera_Texture.width, Camera_Texture.height), 0, 0);
         RenderTexture.active = null;
         byte[] bytes = screenShot.EncodeToPNG();
-        System.IO.File.WriteAllBytes("C:/temp/temp.png", bytes);
+        System.IO.File.WriteAllBytes(destination, bytes);
+        sleep(0.5f);
 
+        if (!Application.isEditor) {
+            AndroidJavaClass intentClass = new AndroidJavaClass("android.content.Intent");
+            AndroidJavaObject intentObject = new AndroidJavaObject("android.content.Intent");
+            intentObject.Call<AndroidJavaObject>("setAction", intentClass.GetStatic<string>("ACTION_SEND"));
+            AndroidJavaClass uriClass = new AndroidJavaClass("android.net.Uri");
+            AndroidJavaObject uriObject = uriClass.CallStatic<AndroidJavaObject>("parse", "file://" + destination);
+            intentObject.Call<AndroidJavaObject>("putExtra", intentClass.GetStatic<string>("EXTRA_STREAM"),uriObject);
+            intentObject.Call<AndroidJavaObject>("putExtra", intentClass.GetStatic<string>("EXTRA_TEXT"),"My new Thumbnail");
+            intentObject.Call<AndroidJavaObject>("setType", "image/jpeg");
+            AndroidJavaClass unity = new AndroidJavaClass("com.unity3d.player.UnityPlayer");
+            AndroidJavaObject currentActivity = unity.GetStatic<AndroidJavaObject>("currentActivity");
+            AndroidJavaObject chooser = intentClass.CallStatic<AndroidJavaObject>("createChooser",intentObject, "Share your new Thumbnail");
+            currentActivity.Call("startActivity", chooser);
+            new WaitForSecondsRealtime(1);
+        }
+
+        new WaitUntil(() => isFocus);
+    }
+    private void OnApplicationFocus(bool focus) {
+        isFocus = focus;
     }
 }

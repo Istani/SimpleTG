@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -9,7 +10,8 @@ namespace LukeWaffel.AndroidGallery{
 		public delegate void OnImageLoadedCallback();
 		private OnImageLoadedCallback callback;
 
-		private Sprite loadedSprite;
+        private String texturePath;
+        private Sprite loadedSprite;
 		private Texture loadedTexture;
 
 		private WWW imageWWW;
@@ -72,8 +74,16 @@ namespace LukeWaffel.AndroidGallery{
 
 		}
 
-		//This function can be used to retrieve the loaded Sprite
-		public Sprite GetSprite(){
+        public String GetPath()
+        {
+
+            //We simply return the loaded texture
+            return texturePath;
+
+        }
+
+        //This function can be used to retrieve the loaded Sprite
+        public Sprite GetSprite(){
 
 			//We simple return the loaded Sprite
 			return loadedSprite;
@@ -83,8 +93,11 @@ namespace LukeWaffel.AndroidGallery{
 		//This function is called when the selected image is done loaded
 		public void OnImageLoaded(){
 
-			//We first set our loaded texture variable to the texture of the loaded WWW
-			loadedTexture = imageWWW.texture;
+            // ADD SK: GetPath
+            texturePath = imageWWW.url;
+
+            //We first set our loaded texture variable to the texture of the loaded WWW
+            loadedTexture = imageWWW.texture;
 
 			//We then set our loaded Sprite variable to a Sprite we create using the loaded WWW
 			loadedSprite = Sprite.Create (imageWWW.texture, new Rect (0, 0, imageWWW.texture.width, imageWWW.texture.height), new Vector2 (0, 0));

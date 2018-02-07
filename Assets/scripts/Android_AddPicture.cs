@@ -21,9 +21,16 @@ public class Android_AddPicture : MonoBehaviour {
         AndroidGallery.Instance.OpenGallery(Import_Callback);
     }
     void Import_Callback() {
-        Texture myCustomImage = AndroidGallery.Instance.GetTexture();
-        OBJ.Recent_List.Add(myCustomImage);
+        Texture2D t = new Texture2D(2, 2);
+        //Texture2D myCustomImage = AndroidGallery.Instance.GetTexture();
+        // GetPath
+        //OBJ.Recent_List.Add(myCustomImage);
+        //OBJ.GenerateRecent();
+
+        (new WWW(AndroidGallery.Instance.GetPath())).LoadImageIntoTexture(t);
+        OBJ.Recent_List.Add((Texture)t);
         OBJ.GenerateRecent();
+
         AndroidGallery.Instance.ResetOutput();
     }
 
@@ -67,10 +74,13 @@ public class Android_AddPicture : MonoBehaviour {
     {
         List<string> galleryImages = GetAllGalleryImagePaths();
         Texture2D t = new Texture2D(2, 2);
-        (new WWW(galleryImages[0])).LoadImageIntoTexture(t);
+        
         // Hier irgendwas machen bis geladen ist?
-        OBJ.Recent_List.Add((Texture)t);
-        OBJ.GenerateRecent();
+        for (int i = 0;i< OBJ.Recent_List.Count;i++) {
+            (new WWW(galleryImages[i])).LoadImageIntoTexture(t);
+            OBJ.Recent_List.Add((Texture)t);
+            OBJ.GenerateRecent();
+        }
         //m_image.texture = t;
     }
 }

@@ -557,6 +557,48 @@ CanvasRenderer:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 331096418}
+--- !u!1001 &422911347
+Prefab:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 4038165250330872, guid: da50a34bcb032774c9f56284d0eedb53, type: 2}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4038165250330872, guid: da50a34bcb032774c9f56284d0eedb53, type: 2}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4038165250330872, guid: da50a34bcb032774c9f56284d0eedb53, type: 2}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4038165250330872, guid: da50a34bcb032774c9f56284d0eedb53, type: 2}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4038165250330872, guid: da50a34bcb032774c9f56284d0eedb53, type: 2}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4038165250330872, guid: da50a34bcb032774c9f56284d0eedb53, type: 2}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4038165250330872, guid: da50a34bcb032774c9f56284d0eedb53, type: 2}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4038165250330872, guid: da50a34bcb032774c9f56284d0eedb53, type: 2}
+      propertyPath: m_RootOrder
+      value: 4
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+  m_ParentPrefab: {fileID: 100100000, guid: da50a34bcb032774c9f56284d0eedb53, type: 2}
+  m_IsPrefabParent: 0
 --- !u!1 &464726291
 GameObject:
   m_ObjectHideFlags: 0
@@ -587,7 +629,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 34dec42df0850654e975f1cbc059ca96, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Recent_List: []
   Layer_GUI: {fileID: 1441261077}
   Layer_Pref_Buttons: {fileID: 1473814192954928, guid: ec1a8aff5b2102f45bbf6907975d787c,
     type: 2}

@@ -6,9 +6,7 @@ using UnityEngine.UI;
 public class Obj_Controller : MonoBehaviour {
 
     enum ObjModes {Move,Scale,Rotate,ScaleFix};
-
-    private List<GameObject> Obj_List = new List<GameObject>();
-    public List<Texture> Recent_List = new List<Texture>();
+    private List<GameObject> Button_List_Recent = new List<GameObject>();
 
     public GameObject Layer_GUI;
     public GameObject Layer_Pref_Buttons;
@@ -24,13 +22,16 @@ public class Obj_Controller : MonoBehaviour {
 
     private bool isFocus = false;
 
+    private List<GameObject> Obj_List = new List<GameObject>();
+    Vector3 Last_HitPoint = Vector3.zero;
+    public GameObject ObjectToCreate;   // Prefab
+
     // Use this for initialization
     void Start () {
-
+        GenerateRecent();
     }
 
     // Update is called once per frame
-    Vector3 Last_HitPoint = Vector3.zero;
 	void Update () {
         // Check Mous Positon
         if (SelectedObj == null) return;
@@ -51,47 +52,76 @@ public class Obj_Controller : MonoBehaviour {
         }
 	}
 
-    public GameObject ObjectToCreate;
+    
     public void GenerateObj(int Pic_ID) {
+        Texture2D t = (Texture2D)Global_Data.Instance.picture_recent.pic_array[Pic_ID].texture;
 
         GameObject temp_object = (GameObject) Instantiate(ObjectToCreate, this.transform);
         SpriteRenderer sr = temp_object.GetComponent<SpriteRenderer>();
-        Texture2D t = (Texture2D)Recent_List[Pic_ID];
         sr.sprite = Sprite.Create(t, new Rect(0, 0, t.width, t.height), new Vector2(0.5f, 0.5f));
-
-        Debug.Log("Generate OBJ " + sr.sprite.name);
         temp_object.transform.localPosition = new Vector3(ObjectToCreate.transform.localPosition.x, Obj_List.Count + 1, ObjectToCreate.transform.localPosition.z);
         Obj_List.Add(temp_object);
+        Debug.Log("Generate OBJ " + sr.sprite.name);
 
         GameObject temp_button = (GameObject)Instantiate(Layer_Pref_Buttons, Layer_GUI.transform);
-        temp_button.transform.localPosition = new Vector3(Layer_Pref_Buttons.transform.localPosition.x+90, ((Obj_List.Count-1) * 100+60)*-1, Layer_Pref_Buttons.transform.localPosition.z);
+        GameObject temp_children = temp_button.transform.GetChild(0).gameObject;
         Button btn = temp_button.GetComponent<Button>();
-        btn.onClick.RemoveAllListeners();
-        
+        Image img = temp_children.GetComponent<Image>();
 
-        Image img = btn.GetComponent<Image>();
+        temp_button.transform.localPosition = new Vector3(Layer_Pref_Buttons.transform.localPosition.x+90, ((Obj_List.Count-1) * 100+60)*-1, Layer_Pref_Buttons.transform.localPosition.z);
+        btn.onClick.RemoveAllListeners();
         img.sprite = sr.sprite;
         btn.image = img;
-
         int ObjToClick = Obj_List.Count - 1;
         btn.onClick.AddListener(() => { SelectObj(ObjToClick); });
         SelectObj(ObjToClick);
     }
 
-    public void GenerateRecent() {
-        GameObject temp_button = (GameObject)Instantiate(Recent_Pref_Buttons, Recent_GUI.transform);
-        temp_button.transform.localPosition = new Vector3(Recent_Pref_Buttons.transform.localPosition.x + 90, ((Recent_List.Count - 1) * 100 + 60) * -1, Recent_Pref_Buttons.transform.localPosition.z);
-        Button btn = temp_button.GetComponent<Button>();
-        btn.onClick.RemoveAllListeners();
-        Image img = btn.GetComponent<Image>();
-        Texture2D t = (Texture2D)Recent_List[Recent_List.Count - 1];
-        img.sprite = Sprite.Create(t, new Rect(0, 0, t.width, t.height), new Vector2(0.5f, 0.5f));
-        btn.image = img;
+    public void GenerateRecent(int objectToGenerate = -1) {
+        Debug.Log("Trying to Regenerate Recent Buttons");
+        Clean_Buttons(Button_List_Recent);
+        
+        Pictures[] current_recent = Global_Data.Instance.picture_recent.pic_array;
+        for (int count_recent=0;count_recent<current_recent.Length;count_recent++) {
+            if (current_recent[count_recent]==null) {
+                Debug.LogWarning("No Recent");
+                continue;
+            }
+            if (current_recent[count_recent].path == null) {
+                Debug.LogWarning("No Path for Recent Image");
+                continue;
+            }
+            if (current_recent[count_recent].texture == null) {
+                Debug.LogWarning("No Texture for Recent Image");
+                continue;
+            }
+            
+            GameObject temp_button = (GameObject)Instantiate(Recent_Pref_Buttons, Recent_GUI.transform);
+            GameObject temp_children = temp_button.transform.GetChild(0).gameObject;
+            Button btn = temp_button.GetComponent<Button>();
+            Image img = temp_children.GetComponent<Image>();
+            Texture2D t = (Texture2D)current_recent[count_recent].texture;
 
+            temp_button.transform.localPosition = new Vector3(Recent_Pref_Buttons.transform.localPosition.x + 90, ((count_recent) * 100 + 60) * -1, Recent_Pref_Buttons.transform.localPosition.z);
+            
+            btn.onClick.RemoveAllListeners();
+            int Button_No = count_recent;   // Die Variable selbst darf man ja nicht benutzen beim Button -.- (Bzw wohl eher bei Dynamischen Funktionen?
+            btn.onClick.AddListener(() => { GenerateObj(Button_No); });
+            
+            img.sprite = Sprite.Create(t, new Rect(0, 0, t.width, t.height), new Vector2(0.5f, 0.5f));
+            btn.image = img;    // ? NOTE: Ist das nicht eigentlich falsch?
 
-        int ObjToClick = Recent_List.Count - 1;
-        btn.onClick.AddListener(() => { GenerateObj(ObjToClick); });
-        GenerateObj(ObjToClick);
+            Button_List_Recent.Add(temp_button);
+        }
+        if (objectToGenerate>=0) {
+            GenerateObj(objectToGenerate);
+        }
+    }
+
+    public void Clean_Buttons(List<GameObject> Button_List) {
+        foreach (GameObject g in Button_List) {
+            Destroy(g);
+        }
     }
 
     public void SelectObj(int Element) {

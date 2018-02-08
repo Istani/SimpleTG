@@ -10,7 +10,6 @@ public class Line_To_Sprite : MonoBehaviour {
     
 	void Start () {
         Vector2 S = gameObject.GetComponent<SpriteRenderer>().sprite.bounds.size;
-        Debug.Log(S);
         gameObject.GetComponent<BoxCollider>().size = S;
         gameObject.GetComponent<BoxCollider>().center = new Vector2(0, 0);
 
@@ -23,6 +22,6 @@ public class Line_To_Sprite : MonoBehaviour {
 
     // Update is called once per frame
     void Update () {
-        Start();
+        //Start();
     }
 }

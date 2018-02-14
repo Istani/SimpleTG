@@ -53,11 +53,23 @@ public class Obj_Controller : MonoBehaviour {
 	}
 
     
-    public void GenerateObj(int Pic_ID) {
-        Texture2D t = (Texture2D)Global_Data.Instance.picture_recent.pic_array[Pic_ID].texture;
-
+    public void GenerateObj(int Pic_ID, Pictures pic = null) {
+        Texture2D t;
+        Pictures[] current_recent = Global_Data.Instance.picture_recent.pic_array;
+        if (pic==null) { 
+            t = (Texture2D)current_recent[Pic_ID].texture;
+        } else {
+            t = (Texture2D)pic.texture;
+        }
         GameObject temp_object = (GameObject) Instantiate(ObjectToCreate, this.transform);
         SpriteRenderer sr = temp_object.GetComponent<SpriteRenderer>();
+        Generate_Layer GL= temp_object.GetComponent<Generate_Layer>();
+        if (pic==null) {
+            GL.data.pic = current_recent[Pic_ID];
+        } else  {
+            GL.data.pic = pic;
+        }
+        
         sr.sprite = Sprite.Create(t, new Rect(0, 0, t.width, t.height), new Vector2(0.5f, 0.5f));
         temp_object.transform.localPosition = new Vector3(ObjectToCreate.transform.localPosition.x, Obj_List.Count + 1, ObjectToCreate.transform.localPosition.z);
         Obj_List.Add(temp_object);
@@ -75,6 +87,18 @@ public class Obj_Controller : MonoBehaviour {
         int ObjToClick = Obj_List.Count - 1;
         btn.onClick.AddListener(() => { SelectObj(ObjToClick); });
         SelectObj(ObjToClick);
+
+        Global_Data.Instance.picture_recent.Add_Picture(current_recent[Pic_ID]);
+    }
+
+    public void GenerateObj(Layers layer) {
+        GenerateObj(0, layer.pic);
+        GameObject GO = Obj_List[Obj_List.Count - 1];
+        GO.transform.position = new Vector3(layer.position.x, GO.transform.position.y, layer.position.y);
+        GO.transform.localScale = new Vector3(layer.scale.x, layer.scale.y, 1);
+        // data.rotation = transform.localRotation.eulerAngles.z;
+        GO.transform.localRotation = new Quaternion(0, 0, layer.rotation, 0);
+
     }
 
     public void GenerateRecent(int objectToGenerate = -1) {
@@ -205,6 +229,16 @@ public class Obj_Controller : MonoBehaviour {
     }
 
     public void ExportProject() {
+        Global_Data.Instance.current_project.Clean_Layer();
+        int layer_count = 0;
+        foreach (GameObject GO in Obj_List) {
+            Generate_Layer GL = GO.GetComponent<Generate_Layer>();
+            Layers temp_layer = GL.data;
+            Global_Data.Instance.current_project.Add_Layer(temp_layer, layer_count);
+            layer_count++;
+        }
+        Global_Data.Instance.current_project.Save();
+
         SelectObj(-1);
         sleep(1f);
         string destination = System.IO.Path.Combine(Application.persistentDataPath, "screenshot.png");

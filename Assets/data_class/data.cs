@@ -3,6 +3,7 @@
 using System.IO;
 using System.Xml;
 using System.Xml.Serialization;
+using System.Collections.Generic;
 
 public class Global { // #define klappt irgendwie nicht... dann halt so^^
     public const int MAX_RECENT     = 7;
@@ -11,6 +12,7 @@ public class Global { // #define klappt irgendwie nicht... dann halt so^^
 
 public class Pictures {
     public string path = "";
+    private bool isTextureLoaded = false;
 
     [XmlIgnore]
     public Texture2D texture = new Texture2D(2, 2);
@@ -25,7 +27,10 @@ public class Pictures {
         Debug.Log("Picture Load: " + path);
     }
     public void ReLoad_Texture() {
-        (new WWW(path)).LoadImageIntoTexture(texture);
+        if (isTextureLoaded==false) { 
+            (new WWW(path)).LoadImageIntoTexture(texture);
+            isTextureLoaded = true;
+        }
     }
 }
 
@@ -96,7 +101,39 @@ public class Project {
     public string name;
     public Layers[] layer_array = new Layers[Global.MAX_RECENT];
 
-    public void Add_Layer(Layers layer) { // NOTE: Ich glaube so ist das keine vernünftige idee...
-        layer_array[layer_array.Length] = layer;
+    public void Add_Layer(Layers layer, int count=0) { // NOTE: Ich glaube so ist das keine vernünftige idee...
+        layer_array[count] = layer;
     }
+    public void Clean_Layer() {
+        layer_array = new Layers[Global.MAX_RECENT];
+    }
+
+    public void Save()  {
+        if (name=="" || name == null) {
+            name = System.DateTime.Now.Year.ToString() + System.DateTime.Now.Month.ToString("D2") + System.DateTime.Now.Day.ToString("D2") + "_";
+            name += System.DateTime.Now.Hour.ToString("D2") + System.DateTime.Now.Minute.ToString("D2") + System.DateTime.Now.Second.ToString("D2");
+        }
+        string file_path = Path.Combine(Application.persistentDataPath, "project."+name+".xml");
+        var serializer = new XmlSerializer(typeof(Project));
+        using (var stream = new FileStream(file_path, FileMode.Create))
+        {
+            serializer.Serialize(stream, this);
+        }
+    }
+    public static List<Project> Load_all()  {
+        List<Project> Return_List = new List<Project>();
+        DirectoryInfo dir = new DirectoryInfo(Application.persistentDataPath);
+        FileInfo[] info = dir.GetFiles("project.*.xml");
+        foreach (FileInfo f in info)
+        {
+            var serializer = new XmlSerializer(typeof(Project));
+            using (var stream = new FileStream(f.ToString(), FileMode.Open))
+            {
+                Project ReturnValue = serializer.Deserialize(stream) as Project;
+                Return_List.Add(ReturnValue);
+            }
+        }
+        return Return_List;
+    }
+
 }
